@@ -159,7 +159,12 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
       // be served from an edge cache entry created by another request. The
       // negative TTL explicitly disables Cloudflare caching for the playlist,
       // key, and segment subrequests made through this relay.
-      const {response:r,url:finalURL}=await upstream(raw,{headers,method:request.method,cf:{cacheTtlByStatus:{'200-599':-1}}});
+      // Some upstream CDN nodes still reuse a playlist when only the signed
+      // path/query changes. A per-request nonce makes the cache key unique;
+      // the origin ignores this extra query parameter while auth_key remains
+      // untouched.
+      const upstreamURL=new URL(raw);upstreamURL.searchParams.set('__relay_nonce',crypto.randomUUID());
+      const {response:r,url:finalURL}=await upstream(upstreamURL.toString(),{headers,method:request.method,cf:{cacheTtlByStatus:{'200-599':-1}}});
       if(!r.ok&&r.status!==206){await r.body?.cancel();return json({error:`视频源返回 HTTP ${r.status}`},502);}
       const ct=r.headers.get('content-type')||'';
       const output=new Headers({'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});

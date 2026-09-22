@@ -1,0 +1,14 @@
+import {build} from 'esbuild';
+import postcss from 'postcss';
+import tailwind from '@tailwindcss/postcss';
+import {mkdir,readFile,writeFile,copyFile,rm} from 'node:fs/promises';
+await rm('cloudflare-dist',{recursive:true,force:true});
+await mkdir('cloudflare-dist/public',{recursive:true});
+await build({entryPoints:['cloudflare/entry.tsx'],bundle:true,minify:true,outfile:'cloudflare-dist/public/app.js',platform:'browser',format:'esm',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'}});
+const css=await postcss([tailwind()]).process(await readFile('app/globals.css','utf8'),{from:'app/globals.css',to:'cloudflare-dist/public/app.css'});
+await writeFile('cloudflare-dist/public/app.css',css.css);
+await copyFile('public/extension-worker.js','cloudflare-dist/public/extension-worker.js');
+await build({entryPoints:['cloudflare/worker.ts'],bundle:true,minify:true,outfile:'cloudflare-dist/worker.js',platform:'browser',format:'esm',target:'es2022'});
+await writeFile('cloudflare-dist/public/index.html','<!doctype html><html lang="zh-CN" class="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>映流 · 在线播放器</title><meta name="description" content="加载 XPTV 视频源，浏览、搜索与在线播放。"><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/app.css"></head><body><div id="root"></div><script type="module" src="/app.js"></script></body></html>');
+await copyFile('public/favicon.svg','cloudflare-dist/public/favicon.svg');
+console.log('Cloudflare Worker 与静态页面已构建：cloudflare-dist/');

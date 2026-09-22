@@ -1,0 +1,506 @@
+[
+  {
+    "file": "4kav.js",
+    "id": "4kav",
+    "name": "默认分组",
+    "size": 4528,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/4kav.js"
+  },
+  {
+    "file": "7sefun.js",
+    "id": "7sefun",
+    "name": "七色番",
+    "size": 13395,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/7sefun.js"
+  },
+  {
+    "file": "91_vod_xptv.js",
+    "id": "91_vod_xptv",
+    "name": "在线",
+    "size": 3851,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/91_vod_xptv.js"
+  },
+  {
+    "file": "91jav.js",
+    "id": "91jav",
+    "name": "默认分组",
+    "size": 4021,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/91jav.js"
+  },
+  {
+    "file": "alist_tvbox.js",
+    "id": "alist_tvbox",
+    "name": "默认分组",
+    "size": 6416,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/alist_tvbox.js"
+  },
+  {
+    "file": "alist_xiaoya.js",
+    "id": "alist_xiaoya",
+    "name": "默认分组",
+    "size": 10327,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/alist_xiaoya.js"
+  },
+  {
+    "file": "anfuns.js",
+    "id": "anfuns",
+    "name": "anfuns",
+    "size": 4801,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/anfuns.js"
+  },
+  {
+    "file": "anime1.js",
+    "id": "anime1",
+    "name": "默认分组",
+    "size": 3924,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/anime1.js"
+  },
+  {
+    "file": "aowu.js",
+    "id": "aowu",
+    "name": "aowu",
+    "size": 11499,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/aowu.js"
+  },
+  {
+    "file": "apple.js",
+    "id": "apple",
+    "name": "默认分组",
+    "size": 3981,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/apple.js"
+  },
+  {
+    "file": "avdb.js",
+    "id": "avdb",
+    "name": "默认分组",
+    "size": 3923,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/avdb.js"
+  },
+  {
+    "file": "avtoday.js",
+    "id": "avtoday",
+    "name": "默认分组",
+    "size": 4789,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/avtoday.js"
+  },
+  {
+    "file": "bililive.js",
+    "id": "bililive",
+    "name": "默认分组",
+    "size": 6118,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/bililive.js"
+  },
+  {
+    "file": "bttwo.js",
+    "id": "bttwo",
+    "name": "默认分组",
+    "size": 5223,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/bttwo.js"
+  },
+  {
+    "file": "catflix.js",
+    "id": "catflix",
+    "name": "默认分组",
+    "size": 6308,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/catflix.js"
+  },
+  {
+    "file": "cupfox.js",
+    "id": "cupfox",
+    "name": "茶杯狐",
+    "size": 17518,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/cupfox.js"
+  },
+  {
+    "file": "czzy.js",
+    "id": "czzy",
+    "name": "默认分组",
+    "size": 211551,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/czzy.js"
+  },
+  {
+    "file": "douyu.js",
+    "id": "douyu",
+    "name": "直播未开播",
+    "size": 9200,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/douyu.js"
+  },
+  {
+    "file": "duanjutt.js",
+    "id": "duanjutt",
+    "name": "默认分组",
+    "size": 5075,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/duanjutt.js"
+  },
+  {
+    "file": "fmovies.js",
+    "id": "fmovies",
+    "name": "server",
+    "size": 10248,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/fmovies.js"
+  },
+  {
+    "file": "gzys.js",
+    "id": "gzys",
+    "name": "gzys",
+    "size": 45069,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/gzys.js"
+  },
+  {
+    "file": "hanime.js",
+    "id": "hanime",
+    "name": "默认分组",
+    "size": 4485,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/hanime.js"
+  },
+  {
+    "file": "hdmoli.js",
+    "id": "hdmoli",
+    "name": "hdmoli",
+    "size": 5250,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/hdmoli.js"
+  },
+  {
+    "file": "hdys.js",
+    "id": "hdys",
+    "name": "默认分组",
+    "size": 5406,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/hdys.js"
+  },
+  {
+    "file": "hjkk.js",
+    "id": "hjkk",
+    "name": "默认分组",
+    "size": 3952,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/hjkk.js"
+  },
+  {
+    "file": "hkdoll.js",
+    "id": "hkdoll",
+    "name": "默认分组",
+    "size": 5894,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/hkdoll.js"
+  },
+  {
+    "file": "hohoj.js",
+    "id": "hohoj",
+    "name": "默认分组",
+    "size": 3853,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/hohoj.js"
+  },
+  {
+    "file": "huangguo.js",
+    "id": "huangguo",
+    "name": "黄果短剧",
+    "size": 13093,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/huangguo.js"
+  },
+  {
+    "file": "huya.js",
+    "id": "huya",
+    "name": "huya",
+    "size": 114658,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/huya.js"
+  },
+  {
+    "file": "iyftv.js",
+    "id": "iyftv",
+    "name": "默认分组",
+    "size": 5821,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/iyftv.js"
+  },
+  {
+    "file": "jable.js",
+    "id": "jable",
+    "name": "默认分组",
+    "size": 4134,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/jable.js"
+  },
+  {
+    "file": "javdb_vod_xptv.js",
+    "id": "javdb_vod_xptv",
+    "name": "在线",
+    "size": 5184,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/javdb_vod_xptv.js"
+  },
+  {
+    "file": "jcy.js",
+    "id": "jcy",
+    "name": "jcy",
+    "size": 51088,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/jcy.js"
+  },
+  {
+    "file": "jdys.js",
+    "id": "jdys",
+    "name": "在线",
+    "size": 5302,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/jdys.js"
+  },
+  {
+    "file": "jianpian.js",
+    "id": "jianpian",
+    "name": "jianpian",
+    "size": 15713,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/jianpian.js"
+  },
+  {
+    "file": "jpyy.js",
+    "id": "jpyy",
+    "name": "默认分组",
+    "size": 16818,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/jpyy.js"
+  },
+  {
+    "file": "jtapp.js",
+    "id": "jtapp",
+    "name": "在线",
+    "size": 4870,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/jtapp.js"
+  },
+  {
+    "file": "kbjfan.js",
+    "id": "kbjfan",
+    "name": "默认分组",
+    "size": 3773,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/kbjfan.js"
+  },
+  {
+    "file": "kuaikaw.js",
+    "id": "kuaikaw",
+    "name": "播放",
+    "size": 9754,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/kuaikaw.js"
+  },
+  {
+    "file": "laodifang.js",
+    "id": "laodifang",
+    "name": "laodifang",
+    "size": 47592,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/laodifang.js"
+  },
+  {
+    "file": "lmm85.js",
+    "id": "lmm85",
+    "name": "路漫漫動漫",
+    "size": 12947,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/lmm85.js"
+  },
+  {
+    "file": "madou.js",
+    "id": "madou",
+    "name": "默认分组",
+    "size": 3963,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/madou.js"
+  },
+  {
+    "file": "mihdr.js",
+    "id": "mihdr",
+    "name": "默认分组",
+    "size": 5237,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/mihdr.js"
+  },
+  {
+    "file": "nanfdj.js",
+    "id": "nanfdj",
+    "name": "默认分组",
+    "size": 4114,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/nanfdj.js"
+  },
+  {
+    "file": "nmlive.js",
+    "id": "nmlive",
+    "name": "nmlive",
+    "size": 144985,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/nmlive.js"
+  },
+  {
+    "file": "novipnoad.js",
+    "id": "novipnoad",
+    "name": "默认分组",
+    "size": 56839,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/novipnoad.js"
+  },
+  {
+    "file": "one.js",
+    "id": "one",
+    "name": "在线",
+    "size": 4021,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/one.js"
+  },
+  {
+    "file": "ph_vod_gay.js",
+    "id": "ph_vod_gay",
+    "name": "在线",
+    "size": 5189,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/ph_vod_gay.js"
+  },
+  {
+    "file": "ph_vod_xptv.js",
+    "id": "ph_vod_xptv",
+    "name": "在线",
+    "size": 3852,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/ph_vod_xptv.js"
+  },
+  {
+    "file": "pornhub.js",
+    "id": "pornhub",
+    "name": "é»è®¤åç»",
+    "size": 4433,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/pornhub.js"
+  },
+  {
+    "file": "ppnix.js",
+    "id": "ppnix",
+    "name": "正片",
+    "size": 8782,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/ppnix.js"
+  },
+  {
+    "file": "ppxys.js",
+    "id": "ppxys",
+    "name": "默认分组",
+    "size": 4575,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/ppxys.js"
+  },
+  {
+    "file": "rrmj.js",
+    "id": "rrmj",
+    "name": "默认分组",
+    "size": 10630,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/rrmj.js"
+  },
+  {
+    "file": "saohuo.js",
+    "id": "saohuo",
+    "name": "燒火電影",
+    "size": 6656,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/saohuo.js"
+  },
+  {
+    "file": "subaibai.js",
+    "id": "subaibai",
+    "name": "默认分组",
+    "size": 6974,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/subaibai.js"
+  },
+  {
+    "file": "symx.js",
+    "id": "symx",
+    "name": "symx",
+    "size": 28638,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/symx.js"
+  },
+  {
+    "file": "taohuazu.js",
+    "id": "taohuazu",
+    "name": "默认分组",
+    "size": 5001,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/taohuazu.js"
+  },
+  {
+    "file": "tiantian.js",
+    "id": "tiantian",
+    "name": "天天影視",
+    "size": 4685,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/tiantian.js"
+  },
+  {
+    "file": "twivideo.js",
+    "id": "twivideo",
+    "name": "默认分组",
+    "size": 4699,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/twivideo.js"
+  },
+  {
+    "file": "wobg.js",
+    "id": "wobg",
+    "name": "默认分组",
+    "size": 3990,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/wobg.js"
+  },
+  {
+    "file": "wwgz.js",
+    "id": "wwgz",
+    "name": "农民影视",
+    "size": 13754,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/wwgz.js"
+  },
+  {
+    "file": "xh_vod_xptv.js",
+    "id": "xh_vod_xptv",
+    "name": "在线",
+    "size": 3221,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/xh_vod_xptv.js"
+  },
+  {
+    "file": "xhamster.js",
+    "id": "xhamster",
+    "name": "默认分组",
+    "size": 4066,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/xhamster.js"
+  },
+  {
+    "file": "xiaohys.js",
+    "id": "xiaohys",
+    "name": "小紅",
+    "size": 7307,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/xiaohys.js"
+  },
+  {
+    "file": "xingya.js",
+    "id": "xingya",
+    "name": "默认分组",
+    "size": 6125,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/xingya.js"
+  },
+  {
+    "file": "yiys.js",
+    "id": "yiys",
+    "name": "意影视",
+    "size": 11536,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/yiys.js"
+  },
+  {
+    "file": "ylys.js",
+    "id": "ylys",
+    "name": "线路",
+    "size": 15622,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/ylys.js"
+  },
+  {
+    "file": "yunpan8.js",
+    "id": "yunpan8",
+    "name": "默认分组",
+    "size": 4134,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/yunpan8.js"
+  },
+  {
+    "file": "yunpanres.js",
+    "id": "yunpanres",
+    "name": "默认分组",
+    "size": 3648,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/yunpanres.js"
+  },
+  {
+    "file": "yydsys.js",
+    "id": "yydsys",
+    "name": "默认分组",
+    "size": 5480,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/yydsys.js"
+  },
+  {
+    "file": "zero.js",
+    "id": "zero",
+    "name": "零度影視",
+    "size": 6962,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/zero.js"
+  },
+  {
+    "file": "zxzj.js",
+    "id": "zxzj",
+    "name": "默认分组",
+    "size": 10596,
+    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/zxzj.js"
+  }
+]

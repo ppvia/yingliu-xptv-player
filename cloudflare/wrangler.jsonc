@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "yingliu-xptv-player",
+  "main": "../cloudflare-dist/worker.js",
+  "compatibility_date": "2026-09-05",
+  "assets": {
+    "directory": "../cloudflare-dist/public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "observability": { "enabled": false }
+}

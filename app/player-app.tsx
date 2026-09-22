@@ -70,7 +70,12 @@ export default function PlayerApp(){
     const failed=()=>{setVideoState('播放失败');setPlayError('浏览器无法播放此地址。请尝试其他线路、重新解析，或切换中转播放；源站失效和不支持的编码也会导致失败。');};
     el.addEventListener('playing',started);el.addEventListener('canplay',ready,{once:true});el.addEventListener('error',failed);
     if(hlsURL&&Hls.isSupported()){
-      hls=new Hls({maxBufferLength:30,backBufferLength:30,enableWorker:true});
+      hls=new Hls({maxBufferLength:30,backBufferLength:30,enableWorker:true,
+        // The deployed player is protected with HTTP Basic Auth. Keep the
+        // browser credentials on the manifest, key, and segment requests.
+        xhrSetup:(xhr)=>{xhr.withCredentials=true;},
+        fetchSetup:(context,init)=>new Request(context.url,{...init,credentials:'same-origin'}),
+      });
       hls.on(Hls.Events.ERROR,(_,data)=>{if(!data.fatal)return;if(data.type===Hls.ErrorTypes.MEDIA_ERROR&&mediaRetries++<1)hls?.recoverMediaError();else{setPlayError(`HLS 加载失败（${data.details}）。可切换线路或播放方式后重试。`);setVideoState('播放失败');hls?.destroy();}});
       hls.loadSource(src);hls.attachMedia(el);
     }else if(!hlsURL||el.canPlayType('application/vnd.apple.mpegurl'))el.src=src;

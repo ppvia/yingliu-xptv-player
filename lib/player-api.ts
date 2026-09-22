@@ -151,6 +151,10 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
       const raw=url.searchParams.get('url')||'';
       const input=JSON.parse(url.searchParams.get('h')||'{}');const headers=outgoingHeaders(input);
       const range=request.headers.get('range');if(range)headers.set('range',range);
+      // Ask the CDN origin to revalidate as well as disabling the Worker
+      // subrequest cache. Signed playlist URLs must never reuse another
+      // episode's response.
+      headers.set('cache-control','no-cache');headers.set('pragma','no-cache');
       // Signed HLS URLs are short-lived and different episodes can otherwise
       // be served from an edge cache entry created by another request. The
       // negative TTL explicitly disables Cloudflare caching for the playlist,

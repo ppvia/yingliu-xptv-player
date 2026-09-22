@@ -193,7 +193,7 @@
     "id": "huangguo",
     "name": "黄果短剧",
     "size": 13093,
-    "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/huangguo.js"
+    "download_url": "https://raw.githubusercontent.com/ppvia/huangguo-xptv-extension/main/js/huangguo.js"
   },
   {
     "file": "huya.js",
@@ -504,3 +504,4 @@
     "download_url": "https://raw.githubusercontent.com/Yswag/xptv-extensions/main/js/zxzj.js"
   }
 ]
+

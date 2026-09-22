@@ -4,6 +4,7 @@ const CUSTOM_REPO='https://raw.githubusercontent.com/ppvia/huangguo-xptv-extensi
 const LIMIT=5*1024*1024;
 const redirectCodes=new Set([301,302,303,307,308]);
 const dnsCache=new Map<string,number>();
+type WorkerFetchInit=RequestInit & {cf?:{cacheTtlByStatus?:Record<string,number>}};
 export function publicIPv4(ip:string){
   const p=ip.split('.').map(Number);if(p.length!==4||p.some(n=>!Number.isInteger(n)||n<0||n>255))return false;
   const [a,b,c]=p;
@@ -37,8 +38,8 @@ function outgoingHeaders(input:Record<string,string>={}){
   if(!h.has('user-agent'))h.set('user-agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36');
   return h;
 }
-async function upstream(raw:string,init:RequestInit={},maxRedirects=5){
-  let u=validateURL(raw);let opts={...init,headers:new Headers(init.headers),redirect:'manual' as RequestRedirect,signal:AbortSignal.timeout(20000)};
+async function upstream(raw:string,init:WorkerFetchInit={},maxRedirects=5){
+  let u=validateURL(raw);const initialHeaders=new Headers(init.headers);let opts:WorkerFetchInit={...init,headers:initialHeaders,redirect:'manual' as RequestRedirect,signal:AbortSignal.timeout(20000)};
   for(let i=0;i<=maxRedirects;i++){
     await validateDNS(u);
     const r=await fetch(u,opts).catch(()=>{throw new Error('源站连接失败或超时，请切换来源或稍后重试');});
@@ -46,8 +47,10 @@ async function upstream(raw:string,init:RequestInit={},maxRedirects=5){
     const location=r.headers.get('location');if(!location||maxRedirects===0)return {response:r,url:u.toString()};
     await r.body?.cancel();
     const next=validateURL(new URL(location,u).toString());
-    if(next.origin!==u.origin){opts.headers.delete('authorization');opts.headers.delete('cookie');}
-    if(r.status===303||([301,302].includes(r.status)&&opts.method==='POST')){opts={...opts,method:'GET',body:undefined};opts.headers.delete('content-type');}
+    const redirectHeaders=new Headers(opts.headers);
+    if(next.origin!==u.origin){redirectHeaders.delete('authorization');redirectHeaders.delete('cookie');}
+    if(r.status===303||([301,302].includes(r.status)&&opts.method==='POST')){opts={...opts,method:'GET',body:undefined};redirectHeaders.delete('content-type');}
+    opts={...opts,headers:redirectHeaders};
     u=next;
   }
   throw new Error('源站重定向次数过多');
@@ -148,7 +151,11 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
       const raw=url.searchParams.get('url')||'';
       const input=JSON.parse(url.searchParams.get('h')||'{}');const headers=outgoingHeaders(input);
       const range=request.headers.get('range');if(range)headers.set('range',range);
-      const {response:r,url:finalURL}=await upstream(raw,{headers,method:request.method});
+      // Signed HLS URLs are short-lived and different episodes can otherwise
+      // be served from an edge cache entry created by another request. The
+      // negative TTL explicitly disables Cloudflare caching for the playlist,
+      // key, and segment subrequests made through this relay.
+      const {response:r,url:finalURL}=await upstream(raw,{headers,method:request.method,cf:{cacheTtlByStatus:{'200-599':-1}}});
       if(!r.ok&&r.status!==206){await r.body?.cancel();return json({error:`视频源返回 HTTP ${r.status}`},502);}
       const ct=r.headers.get('content-type')||'';
       const output=new Headers({'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});

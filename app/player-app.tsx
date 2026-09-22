@@ -16,9 +16,9 @@ function Poster({card}:{card:Card}){
 export default function PlayerApp(){
   const [allSources,setAllSources]=useState<Source[]>(sources);
   const [source,setSource]=useState<Source>(sources[0]);
-  const [config,setConfig]=useState<SourceConfig>({title:'播放测试',tabs:[{name:'公开测试片',ext:{}}]});
+  const [config,setConfig]=useState<SourceConfig>({title:sources[0]?.name||'黄果短剧',tabs:[]});
   const [category,setCategory]=useState(0);
-  const [cards,setCards]=useState<Card[]>([demoCard]);
+  const [cards,setCards]=useState<Card[]>([]);
   const [page,setPage]=useState(1);
   const [query,setQuery]=useState('');
   const [sourceQuery,setSourceQuery]=useState('');
@@ -26,7 +26,7 @@ export default function PlayerApp(){
   const [loading,setLoading]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
-  const [status,setStatus]=useState('选择视频源开始浏览，或先用公开测试片检查播放。');
+  const [status,setStatus]=useState('正在加载黄果短剧…');
   const [selected,setSelected]=useState<Card|null>(null);
   const [groups,setGroups]=useState<TrackGroup[]>([]);
   const [group,setGroup]=useState('0');
@@ -57,7 +57,7 @@ export default function PlayerApp(){
   const playbackHeaders=Array.isArray(playInfo?.headers)?playInfo?.headers[Number(line)]||playInfo?.headers[0]||{}:playInfo?.headers||{};
   const headerKey=JSON.stringify(playbackHeaders);
   useEffect(()=>()=>client.current?.stop(),[]);
-  useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem('xptv-sources')||'[]');if(Array.isArray(saved))setAllSources([...sources,...saved.filter(s=>s&&typeof s.path==='string'&&!sources.some(x=>x.id===s.id))]);}catch{}},[]);
+  useEffect(()=>{if(sources[0])void activate(sources[0]);},[]);
   useEffect(()=>{
     if(!currentURL||!video.current)return;
     const el=video.current;
@@ -151,9 +151,9 @@ export default function PlayerApp(){
   async function copyURL(){try{await navigator.clipboard.writeText(currentURL);setCopied(true);setTimeout(()=>setCopied(false),1800);}catch{setModalError('复制失败，请手动选中地址复制。');}}
   const pan=currentTracks[episode]?.pan;
   return <div className="shell">
-    <header className="topbar"><a className="brand" href="/" aria-label="映流首页"><span className="brand-mark"><Play size={21} fill="currentColor"/></span>映流</a><span className="top-note">在线播放器</span><div className="top-actions"><Button variant="ghost" onClick={()=>showModal('direct')}><Link2 size={16}/>链接播放</Button><Button variant="outline" onClick={()=>showModal('import')}><Plus size={16}/>添加视频源</Button></div></header>
+      <header className="topbar"><a className="brand" href="/" aria-label="映流首页"><span className="brand-mark"><Play size={21} fill="currentColor"/></span>映流</a><span className="top-note">在线播放器</span><div className="top-actions"><Button variant="ghost" onClick={()=>showModal('direct')}><Link2 size={16}/>链接播放</Button></div></header>
     <div className="workspace">
-      <aside><div className="side-title"><h2>我的视频源</h2><span className="eyebrow">{String(allSources.length).padStart(2,'0')}</span></div><label className="source-filter"><Search size={15}/><input aria-label="筛选视频源" value={sourceQuery} onChange={e=>setSourceQuery(e.target.value)} placeholder="筛选视频源…"/></label><nav className="source-list" aria-label="视频源">{visibleSources.map(s=>{const i=allSources.indexOf(s);return <button key={s.id} className={'source-button '+(source.id===s.id?'active':'')} onClick={()=>void activate(s)} aria-current={source.id===s.id?'true':undefined}><span className="source-icon">{/^(bililive|douyu|huya|nmlive)$/.test(s.id)?<Radio size={15}/>:String(i+1).padStart(2,'0')}</span><span className="source-label">{s.name}<small>{s.kind}</small></span>{source.id===s.id&&<ChevronRight size={15}/>}</button>})}{!visibleSources.length&&<p className="source-empty">没有匹配的视频源</p>}</nav><div className="side-foot">已收录仓库 js 目录中的全部扩展；内容和可用性由对应站点提供。<br/>失效时可重新加载或切换来源。<br/><a href="https://github.com/Yswag/xptv-extensions" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-3">查看扩展仓库 <ArrowUpRight size={13}/></a></div></aside>
+      <aside><div className="side-title"><h2>我的视频源</h2><span className="eyebrow">{String(allSources.length).padStart(2,'0')}</span></div><label className="source-filter"><Search size={15}/><input aria-label="筛选视频源" value={sourceQuery} onChange={e=>setSourceQuery(e.target.value)} placeholder="筛选视频源…"/></label><nav className="source-list" aria-label="视频源">{visibleSources.map(s=>{const i=allSources.indexOf(s);return <button key={s.id} className={'source-button '+(source.id===s.id?'active':'')} onClick={()=>void activate(s)} aria-current={source.id===s.id?'true':undefined}><span className="source-icon">{/^(bililive|douyu|huya|nmlive)$/.test(s.id)?<Radio size={15}/>:String(i+1).padStart(2,'0')}</span><span className="source-label">{s.name}<small>{s.kind}</small></span>{source.id===s.id&&<ChevronRight size={15}/>}</button>})}{!visibleSources.length&&<p className="source-empty">没有匹配的视频源</p>}</nav><div className="side-foot">播放器当前仅内置黄果短剧维护版扩展。<br/>脚本和更新记录：<br/><a href="https://github.com/ppvia/huangguo-xptv-extension/blob/main/js/huangguo.js" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-3">查看黄果解析脚本 <ArrowUpRight size={13}/></a></div></aside>
       <main className="content">
         <div className="section-head"><div><div className="eyebrow">WATCH / EXPLORE</div><h1>{config.title||source.name}</h1><p className="subtle">{source.id==='demo'?'先检查播放，再探索视频源':source.kind}</p></div><form className="search" onSubmit={e=>{e.preventDefault();if(!loading)void loadList(category,1,query.trim());}}><Search size={18} color="#929ba9"/><input aria-label="搜索影片" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索影片、剧名…"/><button aria-label="开始搜索" disabled={loading||source.id==='direct'}><ChevronRight size={20}/></button></form></div>
         <section className="stage" ref={playerSection} aria-label="在线播放器"><div className="stage-grid"><div className="screen">{currentURL?<video ref={video} controls playsInline preload="metadata" onEnded={()=>{if(episode>=0&&episode<currentTracks.length-1)void playTrack(currentTracks[episode+1],episode+1);}}/>:<div className="screen-empty"><div className="play-circle">{busy?<LoaderCircle className="animate-spin" size={25}/>:<Play size={27} strokeWidth={1.5}/>}</div><h2>{busy?'正在解析…':selected?'选择一集，开始观看':'你的下一场好戏，从这里开始'}</h2><p>{selected?'剧集和播放线路会显示在选集区。':'从下方选择影片，或粘贴已有的媒体链接。支持 HLS 和 MP4 在线播放。'}</p>{!selected&&<Button variant="outline" className="mt-5" onClick={()=>showModal('direct')}><Link2 size={15}/>粘贴播放链接</Button>}</div>}</div><div className="episodes"><div className="episodes-head"><Layers size={16}/><span>选集</span><span className="subtle ml-auto">{currentTracks.length?`${currentTracks.length} 集`:''}</span></div>{groups.length>1&&<Select disabled={busy} value={group} onValueChange={v=>{selection.current++;setGroup(v);setEpisode(-1);setPlayInfo(null);}}><SelectTrigger className="w-full" aria-label="选择剧集分组"><SelectValue/></SelectTrigger><SelectContent>{groups.map((g,i)=><SelectItem value={String(i)} key={i}>{g.title||`分组 ${i+1}`}</SelectItem>)}</SelectContent></Select>}{currentTracks.length?<div className="episode-grid">{currentTracks.map((t,i)=><button disabled={busy} key={i} className={episode===i?'active':''} onClick={()=>void playTrack(t,i)}>{t.name||`第 ${i+1} 集`}</button>)}</div>:<p className="episodes-empty">{busy?'正在获取剧集…':selected?'未获取到剧集，可尝试其他影片或视频源。':'选择影片后，在这里查看剧集与线路。'}</p>}</div></div><div className="player-bar"><div className="now-title">{selected?.vod_name||'尚未选择影片'}<small>{currentURL?videoState:'等待播放'}</small></div>{playInfo&&playInfo.urls.length>1&&<Select value={line} onValueChange={setLine}><SelectTrigger aria-label="播放线路"><SelectValue/></SelectTrigger><SelectContent>{playInfo.urls.map((_,i)=><SelectItem key={i} value={String(i)}>线路 {i+1}</SelectItem>)}</SelectContent></Select>}{currentURL&&<Button size="sm" variant="ghost" onClick={()=>showModal('url')}><Link2 size={15}/>播放地址</Button>}<label className="flex items-center gap-2 text-sm text-muted-foreground"><Switch checked={proxy} onCheckedChange={setProxy} aria-label="中转播放"/>中转播放</label></div></section>

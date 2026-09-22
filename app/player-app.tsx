@@ -71,9 +71,9 @@ export default function PlayerApp(){
     el.addEventListener('playing',started);el.addEventListener('canplay',ready,{once:true});el.addEventListener('error',failed);
     if(hlsURL&&Hls.isSupported()){
       hls=new Hls({maxBufferLength:30,backBufferLength:30,enableWorker:true,
-        // The deployed player is protected with HTTP Basic Auth. Keep the
-        // browser credentials on the manifest, key, and segment requests.
-        xhrSetup:(xhr)=>{xhr.withCredentials=true;},
+        // Same-origin Basic Auth is handled by the browser. Keep XHR
+        // credentials off so a direct-origin HLS fallback can use ACAO: *.
+        xhrSetup:(xhr)=>{xhr.withCredentials=false;},
         fetchSetup:(context,init)=>new Request(context.url,{...init,credentials:'same-origin'}),
       });
       hls.on(Hls.Events.ERROR,(_,data)=>{if(!data.fatal)return;if(data.type===Hls.ErrorTypes.MEDIA_ERROR&&mediaRetries++<1)hls?.recoverMediaError();else{setPlayError(`HLS 加载失败（${data.details}）。可切换线路或播放方式后重试。`);setVideoState('播放失败');hls?.destroy();}});

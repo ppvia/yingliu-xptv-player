@@ -48,7 +48,7 @@ async function upstream(raw:string,init:WorkerFetchInit={},maxRedirects=5){
     await r.body?.cancel();
     const next=validateURL(new URL(location,u).toString());
     const redirectHeaders=new Headers(opts.headers);
-    if(next.origin!==u.origin){redirectHeaders.delete('authorization');redirectHeaders.delete('cookie');}
+    if(next.origin!==u.origin){redirectHeaders.delete('authorization');redirectHeaders.delete('cookie');redirectHeaders.delete('host');}
     if(r.status===303||([301,302].includes(r.status)&&opts.method==='POST')){opts={...opts,method:'GET',body:undefined};redirectHeaders.delete('content-type');}
     opts={...opts,headers:redirectHeaders};
     u=next;
@@ -159,19 +159,26 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
       // be served from an edge cache entry created by another request. The
       // negative TTL explicitly disables Cloudflare caching for the playlist,
       // key, and segment subrequests made through this relay.
-      // Some upstream CDN nodes still reuse a playlist when only the signed
-      // path/query changes. A per-request nonce makes the cache key unique;
-      // the origin ignores this extra query parameter while auth_key remains
-      // untouched.
-      const upstreamURL=new URL(raw);upstreamURL.searchParams.set('__relay_nonce',crypto.randomUUID());
-      const {response:r,url:finalURL}=await upstream(upstreamURL.toString(),{headers,method:request.method,cf:{cacheTtlByStatus:{'200-599':-1}}});
+      // `cache: no-store` is the Workers fetch switch that bypasses
+      // Cloudflare's subrequest cache for external origins. Signed playlists
+      // must never reuse a response from another episode.
+      const {response:r,url:finalURL}=await upstream(raw,{headers,method:request.method,cache:'no-store',cf:{cacheTtlByStatus:{'200-599':-1}}});
       if(!r.ok&&r.status!==206){await r.body?.cancel();return json({error:`视频源返回 HTTP ${r.status}`},502);}
       const ct=r.headers.get('content-type')||'';
       const output=new Headers({'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});
+      output.set('X-Relay-Upstream-Path',new URL(finalURL).pathname);
+      const originCache=r.headers.get('eo-cache-status');if(originCache)output.set('X-Relay-Origin-Cache',originCache);
       if(ct.includes('mpegurl')||new URL(finalURL).pathname.toLowerCase().endsWith('.m3u8')){
         output.set('Content-Type','application/vnd.apple.mpegurl');
         if(request.method==='HEAD')return new Response(null,{headers:output});
         const manifest=await boundedText(r,2*1024*1024);if(!manifest.trimStart().startsWith('#EXTM3U'))throw new Error('源站返回的不是有效 HLS 播放清单');
+        const requestedPath=new URL(raw).pathname;
+        const requestedVideo=requestedPath.match(/\/videos5\/([^/]+)\//)?.[1];
+        const manifestVideo=manifest.match(/\/videos5\/([^/]+)\//)?.[1];
+        if(new URL(raw).hostname==='yd-hls.bnfuiu.cn'&&requestedVideo&&manifestVideo&&requestedVideo!==manifestVideo){
+          output.set('Location',raw);output.set('X-Relay-Fallback','direct-origin');
+          return new Response(null,{status:302,headers:output});
+        }
         return new Response(rewriteManifest(manifest,finalURL,input),{headers:output});
       }
       if(/text\/html|image\/svg|javascript/i.test(ct)){await r.body?.cancel();throw new Error('此地址返回网页或脚本，不是视频媒体');}

@@ -10,7 +10,7 @@
 
 - `app/player-app.tsx`：React 页面和 HLS.js 播放器。
 - `runtime/extension-worker.js`：独立 Web Worker，提供 `$fetch`、axios 别名、Cheerio、CryptoJS、`argsify/jsonify`、`$cache`、`$config_str`、提示函数，以及五个 XPTV 入口。每次运行最多 60 秒，超时终止线程。
-- `lib/player-api.ts`：Cloudflare 服务端抓取、扩展加载和封面中转；保留媒体代理接口用于兼容诊断，但播放器播放默认直连源站。
+- `lib/player-api.ts`：Cloudflare 服务端抓取、扩展加载和封面中转；保留媒体代理接口用于兼容诊断，但播放器播放默认直连源站。黄果清单域名 `yd-hls.bnfuiu.cn` 会识别 Workers 子请求自带且无法移除的 `CF-Worker` 头并返回固定的假清单，因此 `/api/media` 对该域名不抓取，直接 302 到签名原始地址。
 - `cloudflare/`：直接部署到用户 Cloudflare 账户的独立 SPA + Worker，不依赖 Sites 服务。
 - `worker/index.ts`：Sites/Vinext 的同一业务接口入口。
 

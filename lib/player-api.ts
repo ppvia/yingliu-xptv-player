@@ -149,19 +149,20 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
     }
     if(url.pathname==='/api/media'&&['GET','HEAD'].includes(request.method)){
       const raw=url.searchParams.get('url')||'';
+      const target=validateURL(raw);
+      // The Huangguo playlist host answers every request that carries the
+      // `CF-Worker` header with one fixed decoy playlist, regardless of the
+      // requested episode. The Workers runtime appends that header to all
+      // subrequests and it cannot be removed, so relaying is impossible here.
+      // Send the browser straight to the signed source URL instead: the CDN
+      // serves playlists, keys and segments with `Access-Control-Allow-Origin: *`.
+      if(target.hostname==='yd-hls.bnfuiu.cn')return new Response(null,{status:302,headers:{'Location':raw,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Relay-Fallback':'direct-origin'}});
       const input=JSON.parse(url.searchParams.get('h')||'{}');const headers=outgoingHeaders(input);
       const range=request.headers.get('range');if(range)headers.set('range',range);
-      // Ask the CDN origin to revalidate as well as disabling the Worker
-      // subrequest cache. Signed playlist URLs must never reuse another
-      // episode's response.
+      // Signed HLS URLs are short-lived. Ask the origin to revalidate and keep
+      // the Worker subrequest cache out of the way so one episode's response
+      // is never reused for another.
       headers.set('cache-control','no-cache');headers.set('pragma','no-cache');
-      // Signed HLS URLs are short-lived and different episodes can otherwise
-      // be served from an edge cache entry created by another request. The
-      // negative TTL explicitly disables Cloudflare caching for the playlist,
-      // key, and segment subrequests made through this relay.
-      // `cache: no-store` is the Workers fetch switch that bypasses
-      // Cloudflare's subrequest cache for external origins. Signed playlists
-      // must never reuse a response from another episode.
       const {response:r,url:finalURL}=await upstream(raw,{headers,method:request.method,cache:'no-store',cf:{cacheTtlByStatus:{'200-599':-1}}});
       if(!r.ok&&r.status!==206){await r.body?.cancel();return json({error:`视频源返回 HTTP ${r.status}`},502);}
       const ct=r.headers.get('content-type')||'';
@@ -172,10 +173,12 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
         output.set('Content-Type','application/vnd.apple.mpegurl');
         if(request.method==='HEAD')return new Response(null,{headers:output});
         const manifest=await boundedText(r,2*1024*1024);if(!manifest.trimStart().startsWith('#EXTM3U'))throw new Error('源站返回的不是有效 HLS 播放清单');
-        const requestedPath=new URL(raw).pathname;
-        const requestedVideo=requestedPath.match(/\/videos5\/([^/]+)\//)?.[1];
+        // Safety net for any mirror of the same layout: a playlist that names
+        // a different video than the requested path is not the one we asked
+        // for, so let the browser fetch the source directly.
+        const requestedVideo=target.pathname.match(/\/videos5\/([^/]+)\//)?.[1];
         const manifestVideo=manifest.match(/\/videos5\/([^/]+)\//)?.[1];
-        if(new URL(raw).hostname==='yd-hls.bnfuiu.cn'&&requestedVideo&&manifestVideo&&requestedVideo!==manifestVideo){
+        if(requestedVideo&&manifestVideo&&requestedVideo!==manifestVideo){
           output.set('Location',raw);output.set('X-Relay-Fallback','direct-origin');
           return new Response(null,{status:302,headers:output});
         }

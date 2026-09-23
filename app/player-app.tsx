@@ -5,9 +5,8 @@ import {Play,Search,Plus,Settings2,RefreshCw,ChevronLeft,ChevronRight,Link2,Copy
 import {Button} from '@/components/ui/button';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
 import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
-import {Switch} from '@/components/ui/switch';
 import {Skeleton} from '@/components/ui/skeleton';
-import {ExtensionClient,sources,demoCard,TEST_URL,mediaURL,imageURL,safeHttp,type Source,type SourceConfig,type Card,type Track,type TrackGroup,type PlayInfo} from '@/lib/extension-client';
+import {ExtensionClient,sources,demoCard,TEST_URL,imageURL,safeHttp,type Source,type SourceConfig,type Card,type Track,type TrackGroup,type PlayInfo} from '@/lib/extension-client';
 const message=(e:unknown)=>e instanceof Error?e.message:String(e);
 function Poster({card}:{card:Card}){
   const [failed,setFailed]=useState(false);
@@ -33,7 +32,6 @@ export default function PlayerApp(){
   const [episode,setEpisode]=useState(-1);
   const [playInfo,setPlayInfo]=useState<PlayInfo|null>(null);
   const [line,setLine]=useState('0');
-  const [proxy,setProxy]=useState(true);
   const [playError,setPlayError]=useState('');
   const [videoState,setVideoState]=useState('等待选集');
   const [modal,setModal]=useState<'import'|'config'|'direct'|'url'|null>(null);
@@ -42,7 +40,6 @@ export default function PlayerApp(){
   const [configText,setConfigText]=useState('{}');
   const [modalError,setModalError]=useState('');
   const [directURL,setDirectURL]=useState('');
-  const [directHeaders,setDirectHeaders]=useState('{}');
   const [copied,setCopied]=useState(false);
   const [importBusy,setImportBusy]=useState(false);
   const client=useRef<ExtensionClient|null>(null);
@@ -54,34 +51,32 @@ export default function PlayerApp(){
   const normalizedSourceQuery=sourceQuery.trim().toLocaleLowerCase();
   const visibleSources=normalizedSourceQuery?allSources.filter(s=>`${s.name} ${s.kind} ${s.id}`.toLocaleLowerCase().includes(normalizedSourceQuery)):allSources;
   const currentURL=playInfo?.urls[Number(line)]||'';
-  const playbackHeaders=Array.isArray(playInfo?.headers)?playInfo?.headers[Number(line)]||playInfo?.headers[0]||{}:playInfo?.headers||{};
-  const headerKey=JSON.stringify(playbackHeaders);
   useEffect(()=>()=>client.current?.stop(),[]);
   useEffect(()=>{if(sources[0])void activate(sources[0]);},[]);
   useEffect(()=>{
     if(!currentURL||!video.current)return;
     const el=video.current;
-    const src=proxy?mediaURL(currentURL,JSON.parse(headerKey)):currentURL;
+    const src=currentURL;
     let hls:Hls|null=null;let mediaRetries=0;
     setPlayError('');setVideoState('正在加载视频');
     const hlsURL=/\.m3u8(?:[?#]|$)/i.test(currentURL);
     const started=()=>setVideoState('正在播放');
     const ready=()=>{setVideoState('已就绪');el.play().catch(()=>setVideoState('点击视频中的播放按钮'));};
-    const failed=()=>{setVideoState('播放失败');setPlayError('浏览器无法播放此地址。请尝试其他线路、重新解析，或切换中转播放；源站失效和不支持的编码也会导致失败。');};
+    const failed=()=>{setVideoState('播放失败');setPlayError('浏览器无法播放此地址。请尝试其他线路或重新解析；源站失效和不支持的编码也会导致失败。');};
     el.addEventListener('playing',started);el.addEventListener('canplay',ready,{once:true});el.addEventListener('error',failed);
     if(hlsURL&&Hls.isSupported()){
       hls=new Hls({maxBufferLength:30,backBufferLength:30,enableWorker:true,
-        // Same-origin Basic Auth is handled by the browser. Keep XHR
-        // credentials off so a direct-origin HLS fallback can use ACAO: *.
+        // Fetch manifests, keys and segments directly from the source CDN.
+        // Its wildcard CORS response requires requests without credentials.
         xhrSetup:(xhr)=>{xhr.withCredentials=false;},
-        fetchSetup:(context,init)=>new Request(context.url,{...init,credentials:'same-origin'}),
+        fetchSetup:(context,init)=>new Request(context.url,{...init,credentials:'omit'}),
       });
-      hls.on(Hls.Events.ERROR,(_,data)=>{if(!data.fatal)return;if(data.type===Hls.ErrorTypes.MEDIA_ERROR&&mediaRetries++<1)hls?.recoverMediaError();else{setPlayError(`HLS 加载失败（${data.details}）。可切换线路或播放方式后重试。`);setVideoState('播放失败');hls?.destroy();}});
+      hls.on(Hls.Events.ERROR,(_,data)=>{if(!data.fatal)return;if(data.type===Hls.ErrorTypes.MEDIA_ERROR&&mediaRetries++<1)hls?.recoverMediaError();else{setPlayError(`HLS 加载失败（${data.details}）。可重新解析或切换线路后重试。`);setVideoState('播放失败');hls?.destroy();}});
       hls.loadSource(src);hls.attachMedia(el);
     }else if(!hlsURL||el.canPlayType('application/vnd.apple.mpegurl'))el.src=src;
     else failed();
     return()=>{hls?.destroy();el.removeEventListener('playing',started);el.removeEventListener('canplay',ready);el.removeEventListener('error',failed);el.pause();el.removeAttribute('src');el.load();};
-  },[currentURL,proxy,headerKey]);
+  },[currentURL]);
   function resetPlayer(){selection.current++;setSelected(null);setGroups([]);setGroup('0');setEpisode(-1);setPlayInfo(null);setLine('0');setPlayError('');setVideoState('等待选集');}
   async function activate(next:Source,custom?:Record<string,unknown>){
     const gen=++generation.current;client.current?.stop();client.current=null;
@@ -144,9 +139,9 @@ export default function PlayerApp(){
   }
   function saveConfig(){try{const value=JSON.parse(configText);if(!value||Array.isArray(value)||typeof value!=='object')throw new Error('请填写 JSON 对象');sessionStorage.setItem('xptv-config:'+source.id,JSON.stringify(value));setModal(null);void activate(source,value);}catch(e){setModalError('配置保存失败：'+message(e));}}
   function playDirect(){try{
-    const url=directURL.trim();if(!safeHttp(url))throw new Error('请填写完整的 HTTP/HTTPS 媒体地址');const headers=JSON.parse(directHeaders);if(!headers||typeof headers!=='object'||Array.isArray(headers)||Object.values(headers).some(v=>typeof v!=='string'))throw new Error('请求头应为 JSON 对象，值应为文字');
+    const url=directURL.trim();if(!safeHttp(url))throw new Error('请填写完整的 HTTP/HTTPS 媒体地址');
     // Invalidate pending source calls before switching to a manually supplied video.
-    generation.current++;client.current?.stop();client.current=null;setLoading(false);setBusy(false);resetPlayer();setSource({id:'direct',name:'链接播放',kind:'手动媒体地址',path:''});setConfig({title:'链接播放',tabs:[]});setCards([]);setSelected({vod_id:'direct',vod_name:'链接播放'});setPlayInfo({urls:[url],headers:[headers]});setError('');setStatus('媒体地址已载入');setModal(null);
+    generation.current++;client.current?.stop();client.current=null;setLoading(false);setBusy(false);resetPlayer();setSource({id:'direct',name:'链接播放',kind:'手动媒体地址',path:''});setConfig({title:'链接播放',tabs:[]});setCards([]);setSelected({vod_id:'direct',vod_name:'链接播放'});setPlayInfo({urls:[url]});setError('');setStatus('媒体地址已载入');setModal(null);
   }catch(e){setModalError(message(e));}}
   async function copyURL(){try{await navigator.clipboard.writeText(currentURL);setCopied(true);setTimeout(()=>setCopied(false),1800);}catch{setModalError('复制失败，请手动选中地址复制。');}}
   const pan=currentTracks[episode]?.pan;
@@ -156,7 +151,7 @@ export default function PlayerApp(){
       <aside><div className="side-title"><h2>我的视频源</h2><span className="eyebrow">{String(allSources.length).padStart(2,'0')}</span></div><label className="source-filter"><Search size={15}/><input aria-label="筛选视频源" value={sourceQuery} onChange={e=>setSourceQuery(e.target.value)} placeholder="筛选视频源…"/></label><nav className="source-list" aria-label="视频源">{visibleSources.map(s=>{const i=allSources.indexOf(s);return <button key={s.id} className={'source-button '+(source.id===s.id?'active':'')} onClick={()=>void activate(s)} aria-current={source.id===s.id?'true':undefined}><span className="source-icon">{/^(bililive|douyu|huya|nmlive)$/.test(s.id)?<Radio size={15}/>:String(i+1).padStart(2,'0')}</span><span className="source-label">{s.name}<small>{s.kind}</small></span>{source.id===s.id&&<ChevronRight size={15}/>}</button>})}{!visibleSources.length&&<p className="source-empty">没有匹配的视频源</p>}</nav><div className="side-foot">播放器当前仅内置黄果短剧维护版扩展。<br/>脚本和更新记录：<br/><a href="https://github.com/ppvia/huangguo-xptv-extension/blob/main/js/huangguo.js" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-3">查看黄果解析脚本 <ArrowUpRight size={13}/></a></div></aside>
       <main className="content">
         <div className="section-head"><div><div className="eyebrow">WATCH / EXPLORE</div><h1>{config.title||source.name}</h1><p className="subtle">{source.id==='demo'?'先检查播放，再探索视频源':source.kind}</p></div><form className="search" onSubmit={e=>{e.preventDefault();if(!loading)void loadList(category,1,query.trim());}}><Search size={18} color="#929ba9"/><input aria-label="搜索影片" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索影片、剧名…"/><button aria-label="开始搜索" disabled={loading||source.id==='direct'}><ChevronRight size={20}/></button></form></div>
-        <section className="stage" ref={playerSection} aria-label="在线播放器"><div className="stage-grid"><div className="screen">{currentURL?<video ref={video} controls playsInline preload="metadata" onEnded={()=>{if(episode>=0&&episode<currentTracks.length-1)void playTrack(currentTracks[episode+1],episode+1);}}/>:<div className="screen-empty"><div className="play-circle">{busy?<LoaderCircle className="animate-spin" size={25}/>:<Play size={27} strokeWidth={1.5}/>}</div><h2>{busy?'正在解析…':selected?'选择一集，开始观看':'你的下一场好戏，从这里开始'}</h2><p>{selected?'剧集和播放线路会显示在选集区。':'从下方选择影片，或粘贴已有的媒体链接。支持 HLS 和 MP4 在线播放。'}</p>{!selected&&<Button variant="outline" className="mt-5" onClick={()=>showModal('direct')}><Link2 size={15}/>粘贴播放链接</Button>}</div>}</div><div className="episodes"><div className="episodes-head"><Layers size={16}/><span>选集</span><span className="subtle ml-auto">{currentTracks.length?`${currentTracks.length} 集`:''}</span></div>{groups.length>1&&<Select disabled={busy} value={group} onValueChange={v=>{selection.current++;setGroup(v);setEpisode(-1);setPlayInfo(null);}}><SelectTrigger className="w-full" aria-label="选择剧集分组"><SelectValue/></SelectTrigger><SelectContent>{groups.map((g,i)=><SelectItem value={String(i)} key={i}>{g.title||`分组 ${i+1}`}</SelectItem>)}</SelectContent></Select>}{currentTracks.length?<div className="episode-grid">{currentTracks.map((t,i)=><button disabled={busy} key={i} className={episode===i?'active':''} onClick={()=>void playTrack(t,i)}>{t.name||`第 ${i+1} 集`}</button>)}</div>:<p className="episodes-empty">{busy?'正在获取剧集…':selected?'未获取到剧集，可尝试其他影片或视频源。':'选择影片后，在这里查看剧集与线路。'}</p>}</div></div><div className="player-bar"><div className="now-title">{selected?.vod_name||'尚未选择影片'}<small>{currentURL?videoState:'等待播放'}</small></div>{playInfo&&playInfo.urls.length>1&&<Select value={line} onValueChange={setLine}><SelectTrigger aria-label="播放线路"><SelectValue/></SelectTrigger><SelectContent>{playInfo.urls.map((_,i)=><SelectItem key={i} value={String(i)}>线路 {i+1}</SelectItem>)}</SelectContent></Select>}{currentURL&&<Button size="sm" variant="ghost" onClick={()=>showModal('url')}><Link2 size={15}/>播放地址</Button>}<label className="flex items-center gap-2 text-sm text-muted-foreground"><Switch checked={proxy} onCheckedChange={setProxy} aria-label="中转播放"/>中转播放</label></div></section>
+        <section className="stage" ref={playerSection} aria-label="在线播放器"><div className="stage-grid"><div className="screen">{currentURL?<video ref={video} controls playsInline preload="metadata" onEnded={()=>{if(episode>=0&&episode<currentTracks.length-1)void playTrack(currentTracks[episode+1],episode+1);}}/>:<div className="screen-empty"><div className="play-circle">{busy?<LoaderCircle className="animate-spin" size={25}/>:<Play size={27} strokeWidth={1.5}/>}</div><h2>{busy?'正在解析…':selected?'选择一集，开始观看':'你的下一场好戏，从这里开始'}</h2><p>{selected?'剧集和播放线路会显示在选集区。':'从下方选择影片，或粘贴已有的媒体链接。支持 HLS 和 MP4 在线播放。'}</p>{!selected&&<Button variant="outline" className="mt-5" onClick={()=>showModal('direct')}><Link2 size={15}/>粘贴播放链接</Button>}</div>}</div><div className="episodes"><div className="episodes-head"><Layers size={16}/><span>选集</span><span className="subtle ml-auto">{currentTracks.length?`${currentTracks.length} 集`:''}</span></div>{groups.length>1&&<Select disabled={busy} value={group} onValueChange={v=>{selection.current++;setGroup(v);setEpisode(-1);setPlayInfo(null);}}><SelectTrigger className="w-full" aria-label="选择剧集分组"><SelectValue/></SelectTrigger><SelectContent>{groups.map((g,i)=><SelectItem value={String(i)} key={i}>{g.title||`分组 ${i+1}`}</SelectItem>)}</SelectContent></Select>}{currentTracks.length?<div className="episode-grid">{currentTracks.map((t,i)=><button disabled={busy} key={i} className={episode===i?'active':''} onClick={()=>void playTrack(t,i)}>{t.name||`第 ${i+1} 集`}</button>)}</div>:<p className="episodes-empty">{busy?'正在获取剧集…':selected?'未获取到剧集，可尝试其他影片或视频源。':'选择影片后，在这里查看剧集与线路。'}</p>}</div></div><div className="player-bar"><div className="now-title">{selected?.vod_name||'尚未选择影片'}<small>{currentURL?videoState:'等待播放'}</small></div>{playInfo&&playInfo.urls.length>1&&<Select value={line} onValueChange={setLine}><SelectTrigger aria-label="播放线路"><SelectValue/></SelectTrigger><SelectContent>{playInfo.urls.map((_,i)=><SelectItem key={i} value={String(i)}>线路 {i+1}</SelectItem>)}</SelectContent></Select>}{currentURL&&<Button size="sm" variant="ghost" onClick={()=>showModal('url')}><Link2 size={15}/>播放地址</Button>}<span className="text-sm text-muted-foreground">源站直连</span></div></section>
         {playError&&<div role="alert" className="error-banner">{playError}{currentTracks[episode]&&!busy&&<Button variant="ghost" size="sm" onClick={()=>void playTrack(currentTracks[episode],episode)}>重新解析</Button>}</div>}
         {pan&&<div className="error-banner">此条目是网盘分享资源，网页版尚未接入网盘登录。{safeHttp(pan)?<a className="underline ml-3" href={pan} target="_blank" rel="noreferrer">打开网盘分享 ↗</a>:<span>分享地址无效。</span>}</div>}
         <section className="catalog"><div className="catalog-head"><h2>{searchTerm?`“${searchTerm}” 的搜索结果`:'浏览内容'} <span className="subtle ml-2">{cards.length?`${cards.length} 个条目`:''}</span></h2><div className="flex gap-1"><Button aria-label="视频源配置" variant="ghost" size="icon" disabled={source.id==='demo'||source.id==='direct'} onClick={()=>showModal('config')}><Settings2 size={18}/></Button><Button variant="ghost" size="sm" disabled={loading||source.id==='direct'} onClick={()=>void activate(source)}><RefreshCw size={15} className={loading?'animate-spin':''}/>重新加载</Button></div></div>
@@ -172,7 +167,7 @@ export default function PlayerApp(){
     <Dialog open={modal!==null} onOpenChange={open=>{if(!open)setModal(null);}}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>{modal==='import'?'添加视频源':modal==='config'?'视频源配置':modal==='direct'?'链接播放':'播放地址'}</DialogTitle><DialogDescription>{modal==='import'?'导入 Yswag/xptv-extensions 仓库内的 JS 脚本或 JSON 订阅。':modal==='config'?'配置仅保存在当前浏览器会话，切换设备需要重新填写。':modal==='direct'?'粘贴你可访问的 HLS（m3u8）或 MP4 媒体地址。':'这是视频源解析得到的原始地址，可能有时效限制。'}</DialogDescription></DialogHeader>
       {modal==='import'&&<><label className="form-label" htmlFor="source-url">脚本或订阅地址</label><input id="source-url" className="form-input" value={importURL} onChange={e=>setImportURL(e.target.value)} placeholder="完整的 GitHub Raw 地址"/><p className="form-help">也可输入公开订阅地址，读取后选择要添加的源。扩展使用独立线程运行；原生网页嗅探、网盘登录和部分专用 API 暂不支持。</p>{importList.length>0&&<div className="bank-list">{importList.map((s,i)=><button key={i} disabled={importBusy} onClick={()=>void addSource(s.ext,s.name)}>{s.name} <span className="float-right">添加 +</span></button>)}</div>}<div className="form-actions"><Button disabled={importBusy||!importURL.trim()} onClick={()=>void addSource(importURL.trim())}>{importBusy?<LoaderCircle size={16} className="animate-spin"/>:<Plus size={16}/>}读取并添加</Button></div></>}
       {modal==='config'&&<><label className="form-label" htmlFor="source-config">自定义配置（JSON）</label><textarea id="source-config" rows={7} className="form-input font-mono" value={configText} onChange={e=>setConfigText(e.target.value)}/><p className="form-help">小雅示例：{'{"url":"https://你的小雅域名","token":"可选令牌"}'}。服务器中转不访问本机和内网；请使用可访问的公开 HTTPS 域名。</p><div className="form-actions"><Button onClick={saveConfig}>保存并重新加载</Button></div></>}
-      {modal==='direct'&&<><label className="form-label" htmlFor="media-url">媒体地址</label><input id="media-url" className="form-input" value={directURL} onChange={e=>setDirectURL(e.target.value)} placeholder="https://…/video.m3u8"/><label className="form-label" htmlFor="media-headers">请求头（可选 JSON）</label><textarea id="media-headers" className="form-input font-mono" rows={3} value={directHeaders} onChange={e=>setDirectHeaders(e.target.value)}/><p className="form-help">需要 Referer 等请求头时请开启中转播放。网页登录页、网盘分享页不能作为媒体地址直接播放。</p><div className="form-actions"><Button onClick={playDirect}><Play size={16}/>开始播放</Button></div></>}
+      {modal==='direct'&&<><label className="form-label" htmlFor="media-url">媒体地址</label><input id="media-url" className="form-input" value={directURL} onChange={e=>setDirectURL(e.target.value)} placeholder="https://…/video.m3u8"/><p className="form-help">浏览器直接请求此地址。网页登录页、网盘分享页不能作为媒体地址直接播放。</p><div className="form-actions"><Button onClick={playDirect}><Play size={16}/>开始播放</Button></div></>}
       {modal==='url'&&<><p className="raw-url">{currentURL}</p><div className="form-actions"><Button variant="outline" onClick={()=>void copyURL()}>{copied?<Check size={16}/>:<Copy size={16}/>} {copied?'已复制':'复制地址'}</Button><Button asChild><a href={currentURL} target="_blank" rel="noreferrer">打开原始地址<ArrowUpRight size={15}/></a></Button></div></>}
       {modalError&&<p className="error-banner" role="alert">{modalError}</p>}
     </DialogContent></Dialog>

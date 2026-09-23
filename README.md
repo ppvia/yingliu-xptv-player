@@ -8,7 +8,7 @@
 
 ## 架构和支持边界
 
-- `app/player-app.tsx`：React 页面和 HLS.js 播放器。
+- `app/player-app.tsx`：React 页面和 HLS.js 播放器。黄果清单域名对浏览器跨域 `fetch`/XHR（同时带 `Origin`、`Sec-Fetch-Mode: cors`、`Sec-Fetch-Dest: empty`）一律返回同一份固定的假清单，无论请求哪一集；这三个头由浏览器强制附加，脚本无法去掉。播放器因此给 HLS.js 配置了自定义清单加载器：先用 `mode: "no-cors"` 请求同一地址（不带 `Origin`，源站返回真清单并进入浏览器 HTTP 缓存），再由 HLS.js 正常读取缓存副本；`lib/playlist.ts` 校验清单中的视频 ID 与请求一致，不一致时报错而不是静默播放错误内容。
 - `runtime/extension-worker.js`：独立 Web Worker，提供 `$fetch`、axios 别名、Cheerio、CryptoJS、`argsify/jsonify`、`$cache`、`$config_str`、提示函数，以及五个 XPTV 入口。每次运行最多 60 秒，超时终止线程。
 - `lib/player-api.ts`：Cloudflare 服务端抓取、扩展加载和封面中转；保留媒体代理接口用于兼容诊断，但播放器播放默认直连源站。黄果清单域名 `yd-hls.bnfuiu.cn` 会识别 Workers 子请求自带且无法移除的 `CF-Worker` 头并返回固定的假清单，因此 `/api/media` 对该域名不抓取，直接 302 到签名原始地址。
 - `cloudflare/`：直接部署到用户 Cloudflare 账户的独立 SPA + Worker，不依赖 Sites 服务。

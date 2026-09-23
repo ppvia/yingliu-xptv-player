@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import Hls from 'hls.js';
+import Hls,{type LoaderCallbacks,type LoaderConfiguration,type LoaderContext,type PlaylistLoaderConstructor,type PlaylistLoaderContext} from 'hls.js';
+import {decoyPlaylist} from '@/lib/playlist';
 import {Play,Search,Plus,Settings2,RefreshCw,ChevronLeft,ChevronRight,Link2,Copy,Film,Layers,ArrowUpRight,LoaderCircle,Radio,Check,SquarePlay} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
@@ -8,6 +9,25 @@ import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@
 import {Skeleton} from '@/components/ui/skeleton';
 import {ExtensionClient,sources,demoCard,TEST_URL,imageURL,safeHttp,type Source,type SourceConfig,type Card,type Track,type TrackGroup,type PlayInfo} from '@/lib/extension-client';
 const message=(e:unknown)=>e instanceof Error?e.message:String(e);
+// The Huangguo playlist CDN answers every browser CORS request from a foreign
+// origin (Origin + Sec-Fetch-Mode: cors + Sec-Fetch-Dest: empty, all forced by
+// the browser) with one fixed decoy playlist, whatever episode was requested.
+// A no-cors request carries none of those headers and receives the real
+// playlist, which the browser stores in its HTTP cache (max-age=300); the
+// regular load that follows is served from that cached copy. A decoy that
+// still gets through is reported as an error instead of being played.
+class PrimedPlaylistLoader extends Hls.DefaultConfig.loader {
+  private stopped=false;
+  load(context:PlaylistLoaderContext,config:LoaderConfiguration,callbacks:LoaderCallbacks<PlaylistLoaderContext>){
+    const guarded:LoaderCallbacks<PlaylistLoaderContext>={...callbacks,onSuccess:(response,stats,ctx,networkDetails)=>{
+      if(typeof response.data==='string'&&decoyPlaylist(ctx.url,response.data))callbacks.onError({code:0,text:'源站防盗链返回了其他视频的清单'},ctx,networkDetails,stats);
+      else callbacks.onSuccess(response,stats,ctx,networkDetails);
+    }};
+    fetch(context.url,{mode:'no-cors',credentials:'omit'}).catch(()=>{}).then(()=>{if(!this.stopped)super.load(context,config,guarded as LoaderCallbacks<LoaderContext>);});
+  }
+  abort(){this.stopped=true;super.abort();}
+  destroy(){this.stopped=true;super.destroy();}
+}
 function Poster({card}:{card:Card}){
   const [failed,setFailed]=useState(false);
   return <div className="poster">{card.vod_pic&&safeHttp(card.vod_pic)&&!failed?<img src={imageURL(card.vod_pic)} alt={card.vod_name} loading="lazy" onError={()=>setFailed(true)}/>:<span className="poster-letter"><Film size={40} strokeWidth={1}/></span>}<span className="play-hover"><Play size={36} fill="currentColor"/></span></div>;
@@ -66,12 +86,13 @@ export default function PlayerApp(){
     el.addEventListener('playing',started);el.addEventListener('canplay',ready,{once:true});el.addEventListener('error',failed);
     if(hlsURL&&Hls.isSupported()){
       hls=new Hls({maxBufferLength:30,backBufferLength:30,enableWorker:true,
+        pLoader:PrimedPlaylistLoader as unknown as PlaylistLoaderConstructor,
         // Fetch manifests, keys and segments directly from the source CDN.
         // Its wildcard CORS response requires requests without credentials.
         xhrSetup:(xhr)=>{xhr.withCredentials=false;},
         fetchSetup:(context,init)=>new Request(context.url,{...init,credentials:'omit'}),
       });
-      hls.on(Hls.Events.ERROR,(_,data)=>{if(!data.fatal)return;if(data.type===Hls.ErrorTypes.MEDIA_ERROR&&mediaRetries++<1)hls?.recoverMediaError();else{setPlayError(`HLS 加载失败（${data.details}）。可重新解析或切换线路后重试。`);setVideoState('播放失败');hls?.destroy();}});
+      hls.on(Hls.Events.ERROR,(_,data)=>{if(!data.fatal)return;if(data.type===Hls.ErrorTypes.MEDIA_ERROR&&mediaRetries++<1)hls?.recoverMediaError();else{const reason=data.response?.text?`：${data.response.text}`:'';setPlayError(`HLS 加载失败（${data.details}${reason}）。可重新解析或切换线路后重试。`);setVideoState('播放失败');hls?.destroy();}});
       hls.loadSource(src);hls.attachMedia(el);
     }else if(!hlsURL||el.canPlayType('application/vnd.apple.mpegurl'))el.src=src;
     else failed();

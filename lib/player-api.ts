@@ -1,4 +1,5 @@
 // Shared by the Sites Worker and the independently deployable Cloudflare Worker.
+import {decoyPlaylist} from './playlist';
 const REPO='https://raw.githubusercontent.com/Yswag/xptv-extensions/main/';
 const CUSTOM_REPO='https://raw.githubusercontent.com/ppvia/huangguo-xptv-extension/main/';
 const LIMIT=5*1024*1024;
@@ -173,12 +174,9 @@ export async function handlePlayerAPI(request:Request):Promise<Response|null>{
         output.set('Content-Type','application/vnd.apple.mpegurl');
         if(request.method==='HEAD')return new Response(null,{headers:output});
         const manifest=await boundedText(r,2*1024*1024);if(!manifest.trimStart().startsWith('#EXTM3U'))throw new Error('源站返回的不是有效 HLS 播放清单');
-        // Safety net for any mirror of the same layout: a playlist that names
-        // a different video than the requested path is not the one we asked
-        // for, so let the browser fetch the source directly.
-        const requestedVideo=target.pathname.match(/\/videos5\/([^/]+)\//)?.[1];
-        const manifestVideo=manifest.match(/\/videos5\/([^/]+)\//)?.[1];
-        if(requestedVideo&&manifestVideo&&requestedVideo!==manifestVideo){
+        // Safety net for any mirror of the same layout: a decoy playlist is
+        // not the one we asked for, so let the browser fetch the source directly.
+        if(decoyPlaylist(target.pathname,manifest)){
           output.set('Location',raw);output.set('X-Relay-Fallback','direct-origin');
           return new Response(null,{status:302,headers:output});
         }
